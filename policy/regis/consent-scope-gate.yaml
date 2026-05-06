@@ -1,0 +1,31 @@
+id: consent-scope-gate
+version: 0.1.0
+purpose: Ensure twin-derived Regis features remain inside consent scope.
+inputs:
+  - TwinProjectionFeature
+  - EmbeddingCard
+outcomes:
+  - passed
+  - review_required
+  - blocked
+rules:
+  - id: require_policy_id
+    description: Feature must carry a consent policy id.
+    when: consent_scope_snapshot.policy_id is missing
+    outcome: blocked
+  - id: require_recipient
+    description: Downstream recipient must match consent-scoped recipient or require review.
+    when: requested_use.recipient_id != consent_scope_snapshot.recipient_id
+    outcome: review_required
+  - id: require_purpose
+    description: Downstream purpose must match consent purpose unless purpose compatibility gate passes.
+    when: requested_use.purpose != consent_scope_snapshot.purpose
+    outcome: review_required
+  - id: block_expired
+    description: Expired consent blocks searchable or action use.
+    when: revocation_state == expired
+    outcome: blocked
+  - id: block_revoked
+    description: Revoked consent blocks searchable or action use.
+    when: revocation_state == revoked
+    outcome: blocked
