@@ -1,0 +1,34 @@
+id: authority-band-gate
+version: 0.1.0
+purpose: Ensure downstream use never exceeds the weakest upstream authority band.
+authority_order:
+  - observe
+  - recommend
+  - represent
+  - negotiate
+  - commit
+inputs:
+  - TwinProjectionFeature
+  - EmbeddingCard
+  - AgentRegistration
+outcomes:
+  - passed
+  - review_required
+  - blocked
+rules:
+  - id: require_effective_authority
+    description: Feature must carry an effective authority band.
+    when: effective_authority_band is missing
+    outcome: blocked
+  - id: block_escalation
+    description: Requested authority above effective authority is blocked.
+    when: requested_use.authority_band > effective_authority_band
+    outcome: blocked
+  - id: review_equal_high_authority
+    description: High authority use requires human review even when equal to effective authority.
+    when: requested_use.authority_band in [represent, negotiate, commit]
+    outcome: review_required
+  - id: pass_within_authority
+    description: Requested authority below effective authority passes if other gates pass.
+    when: requested_use.authority_band <= effective_authority_band
+    outcome: passed
