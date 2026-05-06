@@ -1,0 +1,31 @@
+id: purpose-compatibility-gate
+version: 0.1.0
+purpose: Prevent reuse of projection-derived features outside the consented purpose.
+inputs:
+  - TwinProjectionFeature
+  - EmbeddingCard
+  - Carrier
+outcomes:
+  - passed
+  - review_required
+  - blocked
+rules:
+  - id: exact_purpose_match
+    description: Same source and requested purpose passes.
+    when: requested_use.purpose == consent_scope_snapshot.purpose
+    outcome: passed
+  - id: related_review
+    description: Related mission purposes require review before reuse.
+    when: requested_use.purpose in compatible_purpose_set
+    outcome: review_required
+  - id: unrelated_block
+    description: Unrelated ranking, targeting, pricing, credit, or high-impact decision purposes are blocked.
+    when: requested_use.purpose in prohibited_purpose_set
+    outcome: blocked
+prohibited_purpose_set:
+  - unconsented_targeting
+  - psychological_targeting
+  - creditworthiness
+  - pricing
+  - high_impact_autonomous_decision
+  - unrelated_ranking
