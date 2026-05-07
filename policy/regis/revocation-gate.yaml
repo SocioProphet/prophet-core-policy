@@ -1,0 +1,34 @@
+id: revocation-gate
+version: 0.1.0
+purpose: Block or tombstone Regis features and embeddings when upstream consent or projection state is revoked or expired.
+inputs:
+  - TwinProjectionFeature
+  - EmbeddingCard
+  - RevocationPropagationEvent
+outcomes:
+  - passed
+  - tombstone_required
+  - blocked
+rules:
+  - id: active_passes
+    description: Active revocation state may proceed to other gates.
+    when: revocation_state == active
+    outcome: passed
+  - id: expired_blocks
+    description: Expired projection or consent blocks use and requires tombstone for indexed artifacts.
+    when: revocation_state == expired
+    outcome: tombstone_required
+  - id: revoked_blocks
+    description: Revoked projection or consent blocks use and requires tombstone for indexed artifacts.
+    when: revocation_state == revoked
+    outcome: tombstone_required
+  - id: unknown_review
+    description: Unknown revocation state blocks high-impact use.
+    when: revocation_state == unknown
+    outcome: blocked
+actions:
+  tombstone_required:
+    - mark_feature_revoked
+    - tombstone_vector
+    - demote_graph_edge
+    - emit_revocation_propagation_event
